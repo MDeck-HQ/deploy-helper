@@ -1,0 +1,13 @@
+name: 'Register Build'
+description: |
+  Register a deploy for use with dot.Deploy. See the documentation for more information.
+  This action to be placed at any point in your workflow. It uses pre-processing and post-processing to make sure that
+  the deployment is registered correctly.
+outputs:
+  build-id:
+    description: "Outputs the build ID that should be deployed"
+runs:
+  using: node20
+  main: "dist/main/index.js"
+  post: "dist/post/index.js"
+  pre: "dist/pre/index.js"
