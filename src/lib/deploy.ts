@@ -13,8 +13,17 @@ import {
 import { HttpClient } from "@actions/http-client";
 import { RegisterDeployResponse } from "./types";
 
+export enum DeploymentType {
+  Normal = "normal",
+  Rollback = "rollback",
+  Promotion = "promotion",
+  BlueGreen = "blue-green",
+}
+
 export type DeployPayload = {
   buildId: string;
+  deploymentType: DeploymentType;
+  environment: string;
 };
 
 /**
@@ -39,8 +48,24 @@ export function getClientPayload(): DeployPayload {
     throw new Error("Client payload is missing the buildId");
   }
 
+  if (
+    !payload.client_payload.deployment_type ||
+    typeof payload.client_payload.deployment_type !== "string"
+  ) {
+    throw new Error("Client payload is missing the deploymentType");
+  }
+
+  if (
+    !payload.client_payload.environment ||
+    typeof payload.client_payload.environment !== "string"
+  ) {
+    throw new Error("Client payload is missing the environment");
+  }
+
   return {
     buildId: payload.client_payload.build_id,
+    deploymentType: payload.client_payload.deployment_type as DeploymentType,
+    environment: payload.client_payload.environment,
   };
 }
 
@@ -143,7 +168,7 @@ export async function registerDeployStart() {
     if (response.result?.status !== "ok") {
       core.debug(`Status: ${response.statusCode}`);
       core.debug(`Body: ${JSON.stringify(response.result)}`);
-      throw new Error("Failed to register deploy start");
+      throw new Error("Failed because the server returned a non-ok status");
     }
 
     const buildId = getClientPayload().buildId;
