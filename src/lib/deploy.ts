@@ -100,12 +100,13 @@ export async function uploadArtifact({
 }
 
 export async function registerDeployStart() {
-  const metadata = getMetadata();
-  const verificationToken = nanoid(32);
+  // Save the metadata to a temp file and upload it to the build artifact
   let tmpDir: string = "";
 
-  // Save the metadata to a temp file and upload it to the build artifact
   try {
+    const metadata = getMetadata();
+    const verificationToken = nanoid(32);
+
     const { id, size } = await uploadArtifact({
       name: DOT_DEPLOY_ARTIFACT_NAME,
       filename: VERIFICATION_TOKEN_FILE_NAME,
