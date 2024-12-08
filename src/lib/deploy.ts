@@ -4,12 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import artifact, { ArtifactNotFoundError } from "@actions/artifact";
 import * as core from "@actions/core";
-import { nanoid } from "nanoid";
-import {
-  DOT_DEPLOY_API_BASE_URL,
-  DOT_DEPLOY_ARTIFACT_NAME,
-  VERIFICATION_TOKEN_FILE_NAME,
-} from "./constants";
+import { DOT_DEPLOY_API_BASE_URL } from "./constants";
 import { HttpClient } from "@actions/http-client";
 import { RegisterDeployResponse } from "./types";
 
@@ -17,13 +12,14 @@ export enum DeploymentType {
   Normal = "normal",
   Rollback = "rollback",
   Promotion = "promotion",
-  BlueGreen = "blue-green",
+  BlueGreen = "blue_green",
 }
 
 export type DeployPayload = {
-  buildId: string;
+  version: string;
   deploymentType: DeploymentType;
   environment: string;
+  secret: string; // this secret is used to report the workflow information back to the server
 };
 
 /**
@@ -62,10 +58,20 @@ export function getClientPayload(): DeployPayload {
     throw new Error("Client payload is missing the environment");
   }
 
+  if (
+    !payload.client_payload.secret ||
+    typeof payload.client_payload.secret !== "string"
+  ) {
+    throw new Error("Client payload is missing the secret");
+  }
+
+  core.setSecret(payload.client_payload.secret);
+
   return {
-    buildId: payload.client_payload.build_id,
+    version: payload.client_payload.build_id,
     deploymentType: payload.client_payload.deployment_type as DeploymentType,
     environment: payload.client_payload.environment,
+    secret: payload.client_payload.secret,
   };
 }
 
@@ -81,7 +87,7 @@ export function getMetadata() {
     workflow_run_id: Number(runId),
     branch_name: branch,
     org_login: orgLogin,
-    build_id: payload.buildId,
+    version: payload.version,
   };
 }
 
@@ -130,27 +136,18 @@ export async function registerDeployStart() {
 
   try {
     const metadata = getMetadata();
-    const verificationToken = nanoid(32);
-
-    const { id, size } = await uploadArtifact({
-      name: DOT_DEPLOY_ARTIFACT_NAME,
-      filename: VERIFICATION_TOKEN_FILE_NAME,
-      content: verificationToken,
-    });
-
-    core.debug(`Created artifact ${id} with size ${size}`);
+    const payload = getClientPayload();
     core.debug("Notifying dot-deploy of build start");
 
     const client = new HttpClient("dot-deploy");
     const url = `${DOT_DEPLOY_API_BASE_URL}/actions/deploys/register`;
     const body = {
       ...metadata,
-      artifact_id: id,
-      verification_token: verificationToken,
+      secret: payload.secret,
     };
 
     core.debug(`Registering deploy start at ${url}`);
-    core.debug(`Metadata: ${JSON.stringify(metadata)}`);
+    core.debug(`Request payload: ${JSON.stringify(body)}`);
 
     const response = await client.postJson<RegisterDeployResponse>(url, body);
 
@@ -171,14 +168,10 @@ export async function registerDeployStart() {
       throw new Error("Failed because the server returned a non-ok status");
     }
 
-    const buildId = getClientPayload().buildId;
+    const buildId = getClientPayload().version;
 
-    core.setOutput("build-id", buildId);
-    core.saveState("build-id", buildId);
-    core.setOutput("artifact_id", id);
-    core.saveState("artifact_id", id);
-    core.setOutput("verification_token", verificationToken);
-    core.saveState("verification_token", verificationToken);
+    core.setOutput("version", buildId);
+    core.saveState("version", buildId);
   } catch (error) {
     core.error("Error registering deploy start");
     core.setFailed(error as Error);
