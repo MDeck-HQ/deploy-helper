@@ -1,8 +1,5 @@
 import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
-import path from "node:path";
-import os from "node:os";
-import artifact, { ArtifactNotFoundError } from "@actions/artifact";
 import * as core from "@actions/core";
 import { DOT_DEPLOY_API_BASE_URL } from "./constants";
 import { HttpClient } from "@actions/http-client";
@@ -98,45 +95,6 @@ export function getMetadata() {
     org_login: orgLogin,
     version: payload.version,
   };
-}
-
-async function deleteArtifactIfExists(artifactName: string): Promise<void> {
-  try {
-    await artifact.deleteArtifact(artifactName);
-  } catch (error) {
-    if (error instanceof ArtifactNotFoundError) {
-      core.debug(`Skipping deletion of '${artifactName}', it does not exist`);
-      return;
-    }
-
-    // Best effort, we don't want to fail the action if this fails
-    core.debug(`Unable to delete artifact: ${(error as Error).message}`);
-  }
-}
-
-export async function uploadArtifact({
-  name,
-  content,
-  filename,
-}: {
-  name: string;
-  filename: string;
-  content: string;
-}) {
-  // First try to delete the artifact if it exists
-  await deleteArtifactIfExists(name);
-
-  const appPrefix = "dot-deploy";
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), appPrefix));
-  const file = path.join(tmpDir, filename);
-  await fs.writeFile(file, content);
-
-  const { id, size } = await artifact.uploadArtifact(name, [file], tmpDir, {
-    retentionDays: 1,
-    compressionLevel: 0,
-  });
-
-  return { id, size };
 }
 
 export async function registerDeployStart() {
