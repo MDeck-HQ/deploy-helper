@@ -20,6 +20,7 @@ export type DeployPayload = {
   deploymentType: DeploymentType;
   environment: string;
   secret: string; // this secret is used to report the workflow information back to the server
+  deploymentId: string;
 };
 
 /**
@@ -67,11 +68,19 @@ export function getClientPayload(): DeployPayload {
 
   core.setSecret(payload.client_payload.secret);
 
+  if (
+    !payload.client_payload.deployment_id ||
+    typeof payload.client_payload.deployment_id !== "string"
+  ) {
+    throw new Error("Client payload is missing the deploymentId");
+  }
+
   return {
     version: payload.client_payload.build_id,
     deploymentType: payload.client_payload.deployment_type as DeploymentType,
     environment: payload.client_payload.environment,
     secret: payload.client_payload.secret,
+    deploymentId: payload.client_payload.deployment_id,
   };
 }
 
@@ -143,13 +152,21 @@ export async function registerDeployStart() {
     const url = `${DOT_DEPLOY_API_BASE_URL}/actions/deploys/register`;
     const body = {
       ...metadata,
-      secret: payload.secret,
+      deployment_id: payload.deploymentId,
+    };
+
+    const headers = {
+      Authorization: `Bearer ${payload.secret}`,
     };
 
     core.debug(`Registering deploy start at ${url}`);
     core.debug(`Request payload: ${JSON.stringify(body)}`);
 
-    const response = await client.postJson<RegisterDeployResponse>(url, body);
+    const response = await client.postJson<RegisterDeployResponse>(
+      url,
+      body,
+      headers,
+    );
 
     if (response.statusCode <= 299) {
       core.debug("Successfully registered deploy start");
