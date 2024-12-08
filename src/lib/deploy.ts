@@ -86,11 +86,13 @@ export function getMetadata() {
   const runId = process.env.GITHUB_RUN_ID;
   const branch = process.env.GITHUB_REF_NAME;
   const orgLogin = process.env.GITHUB_REPOSITORY_OWNER;
+  const runAttempt = process.env.GITHUB_RUN_ATTEMPT;
   const payload = getClientPayload();
 
   return {
     repository_id: Number(repositoryId),
     workflow_run_id: Number(runId),
+    workflow_run_attempt: Number(runAttempt),
     branch_name: branch,
     org_login: orgLogin,
     version: payload.version,
