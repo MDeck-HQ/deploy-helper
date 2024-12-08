@@ -39,10 +39,10 @@ export function getClientPayload(): DeployPayload {
   }
 
   if (
-    !payload.client_payload.build_id ||
-    typeof payload.client_payload.build_id !== "string"
+    !payload.client_payload.version ||
+    typeof payload.client_payload.version !== "string"
   ) {
-    throw new Error("Client payload is missing the buildId");
+    throw new Error("Client payload is missing the build version");
   }
 
   if (
