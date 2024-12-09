@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import fs from "node:fs/promises";
 import * as core from "@actions/core";
 import { DOT_DEPLOY_API_BASE_URL } from "./constants";
 import { HttpClient } from "@actions/http-client";
@@ -87,12 +86,14 @@ export function getMetadata() {
   const branch = process.env.GITHUB_REF_NAME;
   const orgLogin = process.env.GITHUB_REPOSITORY_OWNER;
   const runAttempt = process.env.GITHUB_RUN_ATTEMPT;
+  const runNumber = process.env.GITHUB_RUN_NUMBER;
   const payload = getClientPayload();
 
   return {
     repository_id: Number(repositoryId),
     workflow_run_id: Number(runId),
     workflow_run_attempt: Number(runAttempt),
+    workflow_run_number: Number(runNumber),
     branch_name: branch,
     org_login: orgLogin,
     version: payload.version,
@@ -100,9 +101,6 @@ export function getMetadata() {
 }
 
 export async function registerDeployStart() {
-  // Save the metadata to a temp file and upload it to the build artifact
-  let tmpDir: string = "";
-
   try {
     const metadata = getMetadata();
     const payload = getClientPayload();
@@ -153,11 +151,5 @@ export async function registerDeployStart() {
     core.error("Error registering deploy start");
     core.setFailed(error as Error);
     throw error;
-  } finally {
-    if (tmpDir) {
-      fs.rmdir(tmpDir).catch(() => {
-        core.debug("Error removing temp directory");
-      });
-    }
   }
 }

@@ -25688,16 +25688,12 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DeploymentType = void 0;
 exports.getClientPayload = getClientPayload;
 exports.getMetadata = getMetadata;
 exports.registerDeployStart = registerDeployStart;
 const node_fs_1 = __nccwpck_require__(3024);
-const promises_1 = __importDefault(__nccwpck_require__(1455));
 const core = __importStar(__nccwpck_require__(7484));
 const constants_1 = __nccwpck_require__(8386);
 const http_client_1 = __nccwpck_require__(4844);
@@ -25756,19 +25752,19 @@ function getMetadata() {
     const branch = process.env.GITHUB_REF_NAME;
     const orgLogin = process.env.GITHUB_REPOSITORY_OWNER;
     const runAttempt = process.env.GITHUB_RUN_ATTEMPT;
+    const runNumber = process.env.GITHUB_RUN_NUMBER;
     const payload = getClientPayload();
     return {
         repository_id: Number(repositoryId),
         workflow_run_id: Number(runId),
         workflow_run_attempt: Number(runAttempt),
+        workflow_run_number: Number(runNumber),
         branch_name: branch,
         org_login: orgLogin,
         version: payload.version,
     };
 }
 async function registerDeployStart() {
-    // Save the metadata to a temp file and upload it to the build artifact
-    let tmpDir = "";
     try {
         const metadata = getMetadata();
         const payload = getClientPayload();
@@ -25807,13 +25803,6 @@ async function registerDeployStart() {
         core.error("Error registering deploy start");
         core.setFailed(error);
         throw error;
-    }
-    finally {
-        if (tmpDir) {
-            promises_1.default.rmdir(tmpDir).catch(() => {
-                core.debug("Error removing temp directory");
-            });
-        }
     }
 }
 
@@ -25937,14 +25926,6 @@ module.exports = require("node:events");
 
 "use strict";
 module.exports = require("node:fs");
-
-/***/ }),
-
-/***/ 1455:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs/promises");
 
 /***/ }),
 
