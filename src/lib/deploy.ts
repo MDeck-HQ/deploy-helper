@@ -8,7 +8,7 @@ export enum DeploymentType {
   Normal = "normal",
   Rollback = "rollback",
   Promotion = "promotion",
-  BlueGreen = "blue_green",
+  BlueGreen = "blue-green",
 }
 
 export type DeployPayload = {
@@ -145,13 +145,9 @@ export async function registerDeployStart() {
 
     const version = payload.version;
 
-    core.setOutput("version", version);
     core.saveState("version", version);
-    core.setOutput("deployment_id", payload.deploymentId);
     core.saveState("deployment_id", payload.deploymentId);
-    core.setOutput("environment", payload.environment);
     core.saveState("environment", payload.environment);
-    core.setOutput("deployment_type", payload.deploymentType);
     core.saveState("deployment_type", payload.deploymentType);
   } catch (error) {
     core.error("Error registering deploy start");

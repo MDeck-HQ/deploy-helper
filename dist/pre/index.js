@@ -25702,7 +25702,7 @@ var DeploymentType;
     DeploymentType["Normal"] = "normal";
     DeploymentType["Rollback"] = "rollback";
     DeploymentType["Promotion"] = "promotion";
-    DeploymentType["BlueGreen"] = "blue_green";
+    DeploymentType["BlueGreen"] = "blue-green";
 })(DeploymentType || (exports.DeploymentType = DeploymentType = {}));
 /**
  * Returns the payload that was used to trigger the workflow run.
@@ -25796,13 +25796,9 @@ async function registerDeployStart() {
             throw new Error("Failed because the server returned a non-ok status");
         }
         const version = payload.version;
-        core.setOutput("version", version);
         core.saveState("version", version);
-        core.setOutput("deployment_id", payload.deploymentId);
         core.saveState("deployment_id", payload.deploymentId);
-        core.setOutput("environment", payload.environment);
         core.saveState("environment", payload.environment);
-        core.setOutput("deployment_type", payload.deploymentType);
         core.saveState("deployment_type", payload.deploymentType);
     }
     catch (error) {
