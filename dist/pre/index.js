@@ -25739,7 +25739,7 @@ function getClientPayload() {
         throw new Error("Client payload is missing the deploymentId");
     }
     return {
-        version: payload.client_payload.build_id,
+        version: payload.client_payload.version,
         deploymentType: payload.client_payload.deployment_type,
         environment: payload.client_payload.environment,
         secret: payload.client_payload.secret,
