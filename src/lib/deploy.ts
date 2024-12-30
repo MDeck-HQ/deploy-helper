@@ -143,10 +143,10 @@ export async function registerDeployStart() {
       throw new Error("Failed because the server returned a non-ok status");
     }
 
-    const buildId = getClientPayload().version;
+    const version = payload.version;
 
-    core.setOutput("version", buildId);
-    core.saveState("version", buildId);
+    core.setOutput("version", version);
+    core.saveState("version", version);
     core.setOutput("deployment_id", payload.deploymentId);
     core.saveState("deployment_id", payload.deploymentId);
     core.setOutput("environment", payload.environment);
