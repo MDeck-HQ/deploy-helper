@@ -147,6 +147,12 @@ export async function registerDeployStart() {
 
     core.setOutput("version", buildId);
     core.saveState("version", buildId);
+    core.setOutput("deployment_id", payload.deploymentId);
+    core.saveState("deployment_id", payload.deploymentId);
+    core.setOutput("environment", payload.environment);
+    core.saveState("environment", payload.environment);
+    core.setOutput("deployment_type", payload.deploymentType);
+    core.saveState("deployment_type", payload.deploymentType);
   } catch (error) {
     core.error("Error registering deploy start");
     core.setFailed(error as Error);

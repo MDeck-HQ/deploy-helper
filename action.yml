@@ -6,6 +6,12 @@ description: |
 outputs:
   version:
     description: "Outputs the build version that should be deployed"
+  environment:
+    description: "Outputs the environment that the build should be deployed to"
+  deployment_type:
+    description: "Outputs the type of deployment that should be performed"
+  deployment_id:
+    description: "Outputs the dot.Deploy deployment ID"
 runs:
   using: node20
   main: "dist/main/index.js"
